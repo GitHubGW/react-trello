@@ -10,13 +10,11 @@ interface DraggableCardProps {
 const Card = styled.div`
   background-color: ${(props) => props.theme.cardColor};
   border-radius: 5px;
-  padding: 10px;
+  padding: 12px 10px;
   margin-bottom: 10px;
 `;
 
 const DraggableCard = ({ index, todo }: DraggableCardProps) => {
-  console.log("todo", todo);
-
   return (
     <Draggable index={index} draggableId={todo} key={todo}>
       {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (

@@ -13,6 +13,7 @@ import {
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
 import { todosState } from "./atom";
+import DraggableCard from "./components/DraggableCard";
 import GlobalStyle from "./styles/GlobalStyle";
 
 const Container = styled.div`
@@ -39,14 +40,9 @@ const Board = styled.div`
   min-height: 200px;
 `;
 
-const Card = styled.div`
-  background-color: ${(props) => props.theme.cardColor};
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 10px;
-`;
-
 const App = () => {
+  console.log("App");
+
   const [todos, setTodos] = useRecoilState(todosState);
 
   const onDragStart = (initial: DragStart, provided: ResponderProvided) => {};
@@ -71,14 +67,8 @@ const App = () => {
           <Droppable droppableId="one">
             {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
               <Board ref={provided.innerRef} {...provided.droppableProps}>
-                {todos.map((todo, index) => (
-                  <Draggable draggableId={todo} index={index} key={todo}>
-                    {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                      <Card ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                        {todo}
-                      </Card>
-                    )}
-                  </Draggable>
+                {todos.map((todo: string, index: number) => (
+                  <DraggableCard key={todo} index={index} todo={todo} />
                 ))}
                 {provided.placeholder}
               </Board>

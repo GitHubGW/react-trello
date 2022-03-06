@@ -35,10 +35,19 @@ const App = () => {
 
     if (source.droppableId === destination.droppableId) {
       setTodos((todos: TodosState) => {
-        const copiedTodos: string[] = [...todos[source.droppableId]];
-        copiedTodos.splice(source.index, 1);
-        copiedTodos.splice(destination.index, 0, draggableId);
-        const result: TodosState = { ...todos, [destination.droppableId]: copiedTodos };
+        const copiedSource: string[] = [...todos[source.droppableId]];
+        copiedSource.splice(source.index, 1);
+        copiedSource.splice(destination.index, 0, draggableId);
+        const result: TodosState = { ...todos, [destination.droppableId]: copiedSource };
+        return result;
+      });
+    } else if (source.droppableId !== destination.droppableId) {
+      setTodos((todos: TodosState) => {
+        const copiedSource: string[] = [...todos[source.droppableId]];
+        copiedSource.splice(source.index, 1);
+        const copiedDestination: string[] = [...todos[destination.droppableId]];
+        copiedDestination.splice(destination.index, 0, draggableId);
+        const result: TodosState = { ...todos, [source.droppableId]: copiedSource, [destination.droppableId]: copiedDestination };
         return result;
       });
     }

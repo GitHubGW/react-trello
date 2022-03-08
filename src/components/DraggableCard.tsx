@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { SetterOrUpdater, useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { Todo, TodosState, todosState, TRELLO_TODO } from "../atom";
+import { Todo, TodosState, todosState } from "../atom";
 import { handleSaveTodoInLocalStorage } from "../todo.utils";
 
 interface DraggableCardProps {
@@ -43,6 +43,22 @@ const DeleteButton = styled.button<{ isDragging: boolean }>`
 const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps) => {
   const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
 
+  const handleEditTodo = (todoId: number): void => {
+    setTodos((todos: TodosState) => {
+      console.log("todos", todos, boardId, todoId);
+
+      const copiedTodos = [...todos[boardId]];
+
+      console.log("copiedTodos", copiedTodos);
+
+      // copiedTodos
+
+      const result = {};
+
+      return todos;
+    });
+  };
+
   const handleDeleteTodo = (todoId: number): void => {
     setTodos((todos: TodosState) => {
       const copiedTodos: Todo[] = [...todos[boardId]];
@@ -57,7 +73,7 @@ const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps)
     <Draggable index={index} draggableId={String(todoId)} key={todoId}>
       {(provided: DraggableProvided, { isDragging }: DraggableStateSnapshot) => {
         return (
-          <Card isDragging={isDragging} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+          <Card onClick={() => handleEditTodo(todoId)} isDragging={isDragging} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
             <CardText isDragging={isDragging}>{todoText}</CardText>
             <DeleteButton isDragging={isDragging} onClick={() => handleDeleteTodo(todoId)} type="button">
               ✕

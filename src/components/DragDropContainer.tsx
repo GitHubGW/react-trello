@@ -3,6 +3,7 @@ import DroppableBoard from "./DroppableBoard";
 import { useRecoilState } from "recoil";
 import { Todo, TodosState, todosState } from "../atom";
 import { DragDropContext, DragStart, DropResult, ResponderProvided } from "react-beautiful-dnd";
+import { handleSaveTodoInLocalStorage } from "../todo.utils";
 
 const Boards = styled.div`
   display: grid;
@@ -29,6 +30,7 @@ const DragDropContainer = () => {
         copiedSource.splice(source.index, 1);
         copiedSource.splice(destination.index, 0, movedTodoObject);
         const result: TodosState = { ...todos, [destination.droppableId]: copiedSource };
+        handleSaveTodoInLocalStorage(result);
         return result;
       });
     } else if (source.droppableId !== destination.droppableId) {
@@ -39,6 +41,7 @@ const DragDropContainer = () => {
         const copiedDestination: Todo[] = [...todos[destination.droppableId]];
         copiedDestination.splice(destination.index, 0, movedTodoObject);
         const result: TodosState = { ...todos, [source.droppableId]: copiedSource, [destination.droppableId]: copiedDestination };
+        handleSaveTodoInLocalStorage(result);
         return result;
       });
     }

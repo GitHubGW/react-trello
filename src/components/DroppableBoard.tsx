@@ -2,7 +2,8 @@ import { Droppable, DroppableProvided, DroppableStateSnapshot } from "react-beau
 import { useForm } from "react-hook-form";
 import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { Todo, TodosState, todosState } from "../atom";
+import { Todo, TodosState, todosState, TRELLO_TODO } from "../atom";
+import { handleSaveTodoInLocalStorage } from "../todo.utils";
 import DraggableCard from "./DraggableCard";
 
 interface DroppableBoardProps {
@@ -14,11 +15,15 @@ interface FormData {
   text: string;
 }
 
+const Container = styled.div``;
+
 const Board = styled.div`
   background-color: ${(props) => props.theme.boardColor};
   padding: 25px 10px;
   border-radius: 5px;
   min-height: 200px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  text-align: center;
 `;
 
 const BoardId = styled.h1`
@@ -26,6 +31,18 @@ const BoardId = styled.h1`
   font-weight: bold;
   font-size: 20px;
   margin-bottom: 13px;
+  color: rgba(45, 52, 54, 1);
+`;
+
+const BoardForm = styled.form``;
+
+const BoardInput = styled.input`
+  border: none;
+  outline: none;
+  padding: 16px 30px;
+  padding-left: 10px;
+  border-radius: 5px;
+  width: calc(100% - 60px);
 `;
 
 const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith: boolean }>`
@@ -33,14 +50,10 @@ const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith:
   border-radius: 5px;
   transition: all 0.5s;
   padding: 10px;
+  margin-top: 10px;
   box-sizing: border-box;
-  background-color: ${(props) =>
-    props.isDraggingOver === true ? "rgba(178, 190, 195,0.5)" : props.draggingFromThisWith === true ? "rgba(231, 76, 60,0.8)" : props.theme.boardColor};
+  background-color: ${(props) => (props.isDraggingOver === true ? props.theme.boardBgColor : props.draggingFromThisWith === true ? "rgba(231, 76, 60,0.8)" : "transparent")};
 `;
-
-const Form = styled.form``;
-
-const Input = styled.input``;
 
 const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
   const { register, handleSubmit, setValue, getValues } = useForm<FormData>({ mode: "onChange", defaultValues: { text: "" } });
@@ -50,21 +63,22 @@ const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
     setTodos((todos: TodosState) => {
       const { text } = getValues();
       const createdTodo: Todo = { id: Date.now(), text };
-      const result = { ...todos, [boardId]: [createdTodo, ...todos[boardId]] };
+      const result: TodosState = { ...todos, [boardId]: [createdTodo, ...todos[boardId]] };
+      handleSaveTodoInLocalStorage(result);
       return result;
     });
     setValue("text", "");
   };
 
   return (
-    <div>
-      <Form onSubmit={handleSubmit(onValid)}>
-        <Input {...register("text", { required: "할 일을 입력하세요." })} type="text" placeholder={`할 일을 추가하세요.`} />
-      </Form>
+    <Container>
       <Droppable droppableId={boardId}>
         {(provided: DroppableProvided, { isDraggingOver, draggingOverWith, draggingFromThisWith, isUsingPlaceholder }: DroppableStateSnapshot) => (
           <Board ref={provided.innerRef} {...provided.droppableProps}>
             <BoardId>{boardId}</BoardId>
+            <BoardForm onSubmit={handleSubmit(onValid)}>
+              <BoardInput {...register("text", { required: "할 일을 입력하세요." })} type="text" placeholder={`할 일을 추가하세요.`} />
+            </BoardForm>
             <BoardContent isDraggingOver={isDraggingOver} draggingFromThisWith={Boolean(draggingFromThisWith)}>
               {todos.map((todo: Todo, index: number) => (
                 <DraggableCard key={todo.id} index={index} boardId={boardId} todoId={todo.id} todoText={todo.text} />
@@ -74,7 +88,7 @@ const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
           </Board>
         )}
       </Droppable>
-    </div>
+    </Container>
   );
 };
 

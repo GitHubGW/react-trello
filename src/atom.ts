@@ -1,14 +1,24 @@
 import { atom } from "recoil";
 
+export interface Todo {
+  id: number;
+  text: string;
+}
+
 export interface TodosState {
-  [key: string]: string[];
+  [key: string]: Todo[];
 }
 
 export const todosState = atom<TodosState>({
   key: "todosState",
   default: {
-    TODO: ["study", "coding", "work"],
-    DOING: ["eat", "dance", "ride"],
-    DONE: ["play", "do", "drink"],
+    TODO: [],
+    DOING: [],
+    DONE: [],
   },
+});
+
+export const dragStartState = atom<boolean>({
+  key: "dragStartState",
+  default: false,
 });

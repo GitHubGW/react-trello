@@ -5,7 +5,7 @@ const GlobalStyle = createGlobalStyle`
   ${reset}
 
   body{
-    background-color: ${(props) => props.theme.bgColor};
+    background-image: radial-gradient(circle at 10% 10%, rgb(255, 156, 156) 0%, rgb(179, 201, 241) 80%);
   }
 `;
 

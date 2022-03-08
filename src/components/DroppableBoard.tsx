@@ -1,8 +1,8 @@
 import { Droppable, DroppableProvided, DroppableStateSnapshot } from "react-beautiful-dnd";
 import { useForm } from "react-hook-form";
-import { useSetRecoilState } from "recoil";
+import { SetterOrUpdater, useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { Todo, TodosState, todosState, TRELLO_TODO } from "../atom";
+import { Todo, TodosState, todosState } from "../atom";
 import { handleSaveTodoInLocalStorage } from "../todo.utils";
 import DraggableCard from "./DraggableCard";
 
@@ -15,7 +15,23 @@ interface FormData {
   text: string;
 }
 
-const Container = styled.div``;
+const Container = styled.div`
+  position: relative;
+`;
+
+const DeleteBoardButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background-color: lightgray;
+  color: white;
+  padding: 3px 5px;
+  border-radius: 50px;
+  font-size: 12px;
+`;
 
 const Board = styled.div`
   background-color: ${(props) => props.theme.boardColor};
@@ -50,14 +66,24 @@ const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith:
   border-radius: 5px;
   transition: all 0.5s;
   padding: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
   box-sizing: border-box;
   background-color: ${(props) => (props.isDraggingOver === true ? props.theme.boardBgColor : props.draggingFromThisWith === true ? "rgba(231, 76, 60,0.8)" : "transparent")};
 `;
 
 const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
   const { register, handleSubmit, setValue, getValues } = useForm<FormData>({ mode: "onChange", defaultValues: { text: "" } });
-  const setTodos = useSetRecoilState(todosState);
+  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
+
+  const handleDeleteBoard = (boardId: string): void => {
+    setTodos((todos: TodosState) => {
+      const copiedTodos: TodosState = { ...todos };
+      delete copiedTodos[boardId];
+      const result: TodosState = copiedTodos;
+      handleSaveTodoInLocalStorage(result);
+      return result;
+    });
+  };
 
   const onValid = (): void => {
     setTodos((todos: TodosState) => {
@@ -72,6 +98,7 @@ const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
 
   return (
     <Container>
+      <DeleteBoardButton onClick={() => handleDeleteBoard(boardId)}>✕</DeleteBoardButton>
       <Droppable droppableId={boardId}>
         {(provided: DroppableProvided, { isDraggingOver, draggingOverWith, draggingFromThisWith, isUsingPlaceholder }: DroppableStateSnapshot) => (
           <Board ref={provided.innerRef} {...provided.droppableProps}>

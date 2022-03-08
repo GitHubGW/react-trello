@@ -2,7 +2,7 @@ import { Droppable, DroppableProvided, DroppableStateSnapshot } from "react-beau
 import { useForm } from "react-hook-form";
 import { SetterOrUpdater, useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { Todo, TodosState, todosState } from "../atom";
+import { boardTitleModalState, boardTitleState, Todo, TodosState, todosState } from "../atom";
 import { handleSaveTodoInLocalStorage } from "../todo.utils";
 import DraggableCard from "./DraggableCard";
 
@@ -48,6 +48,7 @@ const BoardId = styled.h1`
   font-size: 20px;
   margin-bottom: 13px;
   color: rgba(45, 52, 54, 1);
+  cursor: pointer;
 `;
 
 const BoardForm = styled.form``;
@@ -74,6 +75,13 @@ const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith:
 const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
   const { register, handleSubmit, setValue, getValues } = useForm<FormData>({ mode: "onChange", defaultValues: { text: "" } });
   const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
+  const setBoardTitleModal: SetterOrUpdater<boolean> = useSetRecoilState(boardTitleModalState);
+  const setBoardTitle: SetterOrUpdater<string> = useSetRecoilState(boardTitleState);
+
+  const handleEditBoard = (boardId: string): void => {
+    setBoardTitle(boardId);
+    setBoardTitleModal(true);
+  };
 
   const handleDeleteBoard = (boardId: string): void => {
     setTodos((todos: TodosState) => {
@@ -102,7 +110,7 @@ const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
       <Droppable droppableId={boardId}>
         {(provided: DroppableProvided, { isDraggingOver, draggingOverWith, draggingFromThisWith, isUsingPlaceholder }: DroppableStateSnapshot) => (
           <Board ref={provided.innerRef} {...provided.droppableProps}>
-            <BoardId>{boardId}</BoardId>
+            <BoardId onClick={() => handleEditBoard(boardId)}>{boardId}</BoardId>
             <BoardForm onSubmit={handleSubmit(onValid)}>
               <BoardInput {...register("text", { required: "할 일을 입력하세요." })} type="text" placeholder={`할 일을 추가하세요.`} />
             </BoardForm>

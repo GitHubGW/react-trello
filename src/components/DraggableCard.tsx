@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { SetterOrUpdater, useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { Todo, TodosState, todosState } from "../atom";
+import { cardModalState, cardState, Todo, TodosState, todosState } from "../atom";
 import { handleSaveTodoInLocalStorage } from "../todo.utils";
 
 interface DraggableCardProps {
@@ -15,6 +15,7 @@ interface DraggableCardProps {
 const Card = styled.div<{ isDragging: boolean }>`
   background-color: ${(props) => (props.isDragging === true ? "rgba(85, 239, 196, 0.6)" : props.theme.cardColor)};
   color: ${(props) => (props.isDragging === true ? "white" : "black")};
+  border: 3px solid ${(props) => (props.isDragging === true ? "rgba(85, 239, 196, 1)" : props.theme.cardColor)};
   border-radius: 5px;
   padding: 13px 12px;
   margin-bottom: 10px;
@@ -27,9 +28,22 @@ const Card = styled.div<{ isDragging: boolean }>`
 const CardText = styled.span<{ isDragging: boolean }>`
   font-size: 15px;
   color: ${(props) => (props.isDragging === true ? "white" : "darkgray")};
+  margin-right: auto;
 `;
 
-const DeleteButton = styled.button<{ isDragging: boolean }>`
+const CardEditButton = styled.button<{ isDragging: boolean }>`
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background-color: ${(props) => (props.isDragging === true ? "white" : "rgba(178, 190, 195,1.0)")};
+  color: ${(props) => (props.isDragging === true ? "rgba(178, 190, 195,1.0)" : "white")};
+  padding: 4.5px 7px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-right: 5px;
+`;
+
+const CardDeleteButton = styled.button<{ isDragging: boolean }>`
   border: none;
   outline: none;
   cursor: pointer;
@@ -42,21 +56,12 @@ const DeleteButton = styled.button<{ isDragging: boolean }>`
 
 const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps) => {
   const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
+  const setCardModal: SetterOrUpdater<boolean> = useSetRecoilState(cardModalState);
+  const setCard: SetterOrUpdater<object> = useSetRecoilState(cardState);
 
-  const handleEditTodo = (todoId: number): void => {
-    setTodos((todos: TodosState) => {
-      console.log("todos", todos, boardId, todoId);
-
-      const copiedTodos = [...todos[boardId]];
-
-      console.log("copiedTodos", copiedTodos);
-
-      // copiedTodos
-
-      const result = {};
-
-      return todos;
-    });
+  const handleEditTodo = (boardId: string, todoId: number): void => {
+    setCard({ [boardId]: todoId });
+    setCardModal(true);
   };
 
   const handleDeleteTodo = (todoId: number): void => {
@@ -73,11 +78,14 @@ const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps)
     <Draggable index={index} draggableId={String(todoId)} key={todoId}>
       {(provided: DraggableProvided, { isDragging }: DraggableStateSnapshot) => {
         return (
-          <Card onClick={() => handleEditTodo(todoId)} isDragging={isDragging} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+          <Card isDragging={isDragging} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
             <CardText isDragging={isDragging}>{todoText}</CardText>
-            <DeleteButton isDragging={isDragging} onClick={() => handleDeleteTodo(todoId)} type="button">
+            <CardEditButton isDragging={isDragging} onClick={() => handleEditTodo(boardId, todoId)} type="button">
+              ✎
+            </CardEditButton>
+            <CardDeleteButton isDragging={isDragging} onClick={() => handleDeleteTodo(todoId)} type="button">
               ✕
-            </DeleteButton>
+            </CardDeleteButton>
           </Card>
         );
       }}

@@ -69,7 +69,7 @@ const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith:
   padding: 10px;
   margin-top: 8px;
   box-sizing: border-box;
-  background-color: ${(props) => (props.isDraggingOver === true ? props.theme.boardBgColor : props.draggingFromThisWith === true ? "rgba(231, 76, 60,0.8)" : "transparent")};
+  background-color: ${(props) => (props.isDraggingOver === true ? props.theme.boardBgColor : props.draggingFromThisWith === true ? "rgba(225, 112, 85,0.5)" : "transparent")};
 `;
 
 const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {

@@ -1,29 +1,38 @@
 import { useForm } from "react-hook-form";
-import { cardModalState, todosState, TodosState } from "../atom";
+import { cardModalState, cardState, Todo, todosState, TodosState } from "../atom";
 import { SetterOrUpdater, useRecoilState, useSetRecoilState } from "recoil";
 import ModalContainer from "../shared/ModalContainer";
+import { handleSaveTodoInLocalStorage } from "../todo.utils";
 
 interface FormData {
   text: string;
 }
 
 const CardModal = () => {
-  const [cardModal, setCardModal] = useRecoilState<boolean>(cardModalState);
-  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
   const { register, handleSubmit, getValues, setValue } = useForm<FormData>({ mode: "onChange" });
+  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
+  const [cardModal, setCardModal] = useRecoilState<boolean>(cardModalState);
+  const [card, setCard] = useRecoilState(cardState);
 
   const handleCloseModal = (): void => {
     return setCardModal(false);
   };
 
   const onValid = (): void => {
-    setTodos((todos: TodosState) => {
+    setTodos((todos) => {
       const { text } = getValues();
-      // const result: TodosState = { ...todos, [title]: [] };
-      // handleSaveTodoInLocalStorage(result);
-      // return result;
-      return todos;
+      const copiedTodos = [...todos[Object.keys(card)[0]]];
+      const editingTodoIndex: number = copiedTodos.findIndex((todo) => todo.id === Object.values(card)[0]);
+      copiedTodos.splice(editingTodoIndex, 1);
+      const editedTodo: Todo = { id: Object.values(card)[0], text };
+      copiedTodos.splice(editingTodoIndex, 0, editedTodo);
+      const result = { ...todos, [Object.keys(card)[0]]: copiedTodos };
+      handleSaveTodoInLocalStorage(result);
+      console.log("result", result);
+
+      return result;
     });
+    setCard({});
     setValue("text", "");
     handleCloseModal();
   };

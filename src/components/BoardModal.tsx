@@ -20,7 +20,7 @@ const BoardModal = () => {
   const onValid = (): void => {
     setTodos((todos: TodosState) => {
       const { title } = getValues();
-      const result: TodosState = { ...todos, [title]: [] };
+      const result: TodosState = { [title]: [], ...todos };
       handleSaveTodoInLocalStorage(result);
       return result;
     });

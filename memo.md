@@ -23,5 +23,5 @@ draggableProps: {data-rbd-draggable-context-id: '1', data-rbd-draggable-id: 'stu
 innerRef: ƒ (el)
 
 // snapshot (DraggableStateSnapshot)
-snapshot222 {isDragging: false, isDropAnimating: false, isClone: false, dropAnimation: null, mode: null, …}
+snapshot {isDragging: false, isDropAnimating: false, isClone: false, dropAnimation: null, mode: null, …}
 ```

@@ -17,8 +17,8 @@ const Garbage = styled.div`
   position: fixed;
   bottom: 0px;
   right: 0px;
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
 `;
 
 const DragDropContainer = () => {

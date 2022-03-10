@@ -26,7 +26,7 @@ const Card = styled.div<{ isDragging: boolean }>`
 `;
 
 const CardText = styled.span<{ isDragging: boolean }>`
-  font-size: 15px;
+  font-size: 18px;
   color: ${(props) => (props.isDragging === true ? "white" : "darkgray")};
   margin-right: auto;
 `;

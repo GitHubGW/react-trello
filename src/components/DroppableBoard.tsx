@@ -45,7 +45,7 @@ const Board = styled.div`
 const BoardId = styled.h1`
   text-align: center;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 22px;
   margin-bottom: 13px;
   color: rgba(45, 52, 54, 1);
   cursor: pointer;
@@ -60,6 +60,7 @@ const BoardInput = styled.input`
   padding-left: 10px;
   border-radius: 5px;
   width: calc(100% - 60px);
+  font-size: 15px;
 `;
 
 const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith: boolean }>`

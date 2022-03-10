@@ -38,12 +38,13 @@ const ModalContainer = styled(Modal)`
       h1 {
         text-align: center;
         margin-bottom: 50px;
-        font-size: 20px;
+        font-size: 25px;
         font-weight: 400;
       }
       input {
         border: none;
         outline: none;
+        font-size: 16px;
         padding: 17px 20px;
         padding-left: 13px;
         border-radius: 5px;

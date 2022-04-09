@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://githubgw.github.io/react-trello">
-    <img height="90" src="./previews/trello_logo.png" />
+    <img height="80" src="./previews/trello_logo.png" />
     <br /><br />
     <a display="block" href="https://githubgw.github.io/react-trello">https://githubgw.github.io/react-trello</a>
     <br /><br />

@@ -1,48 +1,51 @@
 import { useForm } from "react-hook-form";
-import { boardTitleModalState, boardTitleState, Todo, todosState, TodosState } from "../atom";
-import { SetterOrUpdater, useRecoilState, useSetRecoilState } from "recoil";
-import { handleSaveTodoInLocalStorage } from "../todo.utils";
-import ModalContainer from "../shared/ModalContainer";
+import { boardTitleModalState, boardTitleState, todosState } from "../atom";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { saveTodoToLocalStorage } from "../utils/todo";
+import StyledModal from "./common/StyledModal";
+import { useCallback } from "react";
 
 interface FormData {
   title: string;
 }
 
 const BoardTitleModal = () => {
-  const [boardTitleModal, setBoardTitleModal] = useRecoilState<boolean>(boardTitleModalState);
   const { register, handleSubmit, getValues, setValue } = useForm<FormData>({ mode: "onChange" });
-  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
   const [boardTitle, setBoardTitle] = useRecoilState<string>(boardTitleState);
+  const [boardTitleModal, setBoardTitleModal] = useRecoilState<boolean>(boardTitleModalState);
+  const setTodos = useSetRecoilState(todosState);
 
-  const handleCloseModal = (): void => {
+  const handleCloseModal = useCallback(() => {
     return setBoardTitleModal(false);
-  };
+  }, [setBoardTitleModal]);
 
-  const onValid = (): void => {
-    setTodos((todos: TodosState) => {
-      const { title } = getValues();
-      const copiedTodos: TodosState = { ...todos };
-      const editingBoard: Todo[] = copiedTodos[boardTitle];
+  const onValid = useCallback(() => {
+    const { title } = getValues();
+    setTodos((todos) => {
+      const copiedTodos = { ...todos };
+      const editingBoard = copiedTodos[boardTitle];
       delete copiedTodos[boardTitle];
-      const result: TodosState = { [title]: editingBoard, ...copiedTodos };
-      handleSaveTodoInLocalStorage(result);
+      const result = { [title]: editingBoard, ...copiedTodos };
+      saveTodoToLocalStorage(result);
       return result;
     });
     setBoardTitle("");
     setValue("title", "");
     handleCloseModal();
-  };
+  }, [boardTitle, getValues, handleCloseModal, setBoardTitle, setTodos, setValue]);
 
   return (
-    <ModalContainer isOpen={boardTitleModal} onRequestClose={handleCloseModal} ariaHideApp={false} contentLabel="boardTitleModal">
-      <button onClick={handleCloseModal}>✕</button>
+    <StyledModal isOpen={boardTitleModal} onRequestClose={handleCloseModal} ariaHideApp={false} contentLabel="boardTitleModal">
+      <button type="button" onClick={handleCloseModal}>
+        ✕
+      </button>
       <form onSubmit={handleSubmit(onValid)}>
         <div>
           <h1>보드 수정</h1>
           <input {...register("title", { required: "보드를 수정하세요." })} type="text" placeholder="보드를 수정하세요." />
         </div>
       </form>
-    </ModalContainer>
+    </StyledModal>
   );
 };
 

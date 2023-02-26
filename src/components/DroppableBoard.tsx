@@ -1,9 +1,11 @@
+import { useCallback } from "react";
 import { Droppable, DroppableProvided, DroppableStateSnapshot } from "react-beautiful-dnd";
 import { useForm } from "react-hook-form";
-import { SetterOrUpdater, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { boardTitleModalState, boardTitleState, Todo, TodosState, todosState } from "../atom";
-import { handleSaveTodoInLocalStorage } from "../todo.utils";
+import { boardTitleModalState, boardTitleState, todosState } from "../atom";
+import { Todo } from "../types/common";
+import { saveTodoToLocalStorage } from "../utils/todo";
 import DraggableCard from "./DraggableCard";
 
 interface DroppableBoardProps {
@@ -14,6 +16,63 @@ interface DroppableBoardProps {
 interface FormData {
   text: string;
 }
+
+const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
+  const { register, handleSubmit, setValue, getValues } = useForm<FormData>({ mode: "onChange", defaultValues: { text: "" } });
+  const setTodos = useSetRecoilState(todosState);
+  const setBoardTitleModal = useSetRecoilState(boardTitleModalState);
+  const setBoardTitle = useSetRecoilState(boardTitleState);
+
+  const handleEditBoard = useCallback(() => {
+    setBoardTitleModal(true);
+    setBoardTitle(boardId);
+  }, [boardId, setBoardTitleModal, setBoardTitle]);
+
+  const handleDeleteBoard = useCallback(() => {
+    setTodos((prev) => {
+      const copiedTodos = { ...prev };
+      delete copiedTodos[boardId];
+      const result = copiedTodos;
+      saveTodoToLocalStorage(result);
+      return result;
+    });
+  }, [boardId, setTodos]);
+
+  const onValid = useCallback(() => {
+    setTodos((prev) => {
+      const { text } = getValues();
+      const createdTodo = { id: Date.now(), text };
+      const result = { ...prev, [boardId]: [createdTodo, ...prev[boardId]] };
+      saveTodoToLocalStorage(result);
+      return result;
+    });
+    setValue("text", "");
+  }, [boardId, getValues, setTodos, setValue]);
+
+  return (
+    <Container>
+      <DeleteBoardButton onClick={handleDeleteBoard}>✕</DeleteBoardButton>
+      <Droppable droppableId={boardId}>
+        {(provided: DroppableProvided, { isDraggingOver, draggingFromThisWith }: DroppableStateSnapshot) => (
+          <Board ref={provided.innerRef} {...provided.droppableProps}>
+            <BoardId onClick={handleEditBoard}>{boardId}</BoardId>
+            <BoardForm onSubmit={handleSubmit(onValid)}>
+              <BoardInput {...register("text", { required: "할 일을 입력하세요." })} type="text" placeholder={`할 일을 추가하세요.`} />
+            </BoardForm>
+            <BoardContent isDraggingOver={isDraggingOver} draggingFromThisWith={!!draggingFromThisWith}>
+              {todos.map((todo, index) => (
+                <DraggableCard key={todo.id} index={index} boardId={boardId} todoId={todo.id} todoText={todo.text} />
+              ))}
+              {provided.placeholder}
+            </BoardContent>
+          </Board>
+        )}
+      </Droppable>
+    </Container>
+  );
+};
+
+export default DroppableBoard;
 
 const Container = styled.div`
   position: relative;
@@ -34,7 +93,7 @@ const DeleteBoardButton = styled.button`
 `;
 
 const Board = styled.div`
-  background-color: ${(props) => props.theme.boardColor};
+  background-color: ${({ theme }) => theme.boardColor};
   padding: 25px 10px;
   border-radius: 5px;
   min-height: 200px;
@@ -70,62 +129,5 @@ const BoardContent = styled.div<{ isDraggingOver: boolean; draggingFromThisWith:
   padding: 10px;
   margin-top: 8px;
   box-sizing: border-box;
-  background-color: ${(props) => (props.isDraggingOver === true ? props.theme.boardBgColor : props.draggingFromThisWith === true ? "rgba(225, 112, 85,0.5)" : "transparent")};
+  background-color: ${({ theme, isDraggingOver, draggingFromThisWith }) => (isDraggingOver ? theme.boardBgColor : draggingFromThisWith ? "rgba(225, 112, 85,0.5)" : "transparent")};
 `;
-
-const DroppableBoard = ({ boardId, todos }: DroppableBoardProps) => {
-  const { register, handleSubmit, setValue, getValues } = useForm<FormData>({ mode: "onChange", defaultValues: { text: "" } });
-  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
-  const setBoardTitleModal: SetterOrUpdater<boolean> = useSetRecoilState(boardTitleModalState);
-  const setBoardTitle: SetterOrUpdater<string> = useSetRecoilState(boardTitleState);
-
-  const handleEditBoard = (boardId: string): void => {
-    setBoardTitle(boardId);
-    setBoardTitleModal(true);
-  };
-
-  const handleDeleteBoard = (boardId: string): void => {
-    setTodos((todos: TodosState) => {
-      const copiedTodos: TodosState = { ...todos };
-      delete copiedTodos[boardId];
-      const result: TodosState = copiedTodos;
-      handleSaveTodoInLocalStorage(result);
-      return result;
-    });
-  };
-
-  const onValid = (): void => {
-    setTodos((todos: TodosState) => {
-      const { text } = getValues();
-      const createdTodo: Todo = { id: Date.now(), text };
-      const result: TodosState = { ...todos, [boardId]: [createdTodo, ...todos[boardId]] };
-      handleSaveTodoInLocalStorage(result);
-      return result;
-    });
-    setValue("text", "");
-  };
-
-  return (
-    <Container>
-      <DeleteBoardButton onClick={() => handleDeleteBoard(boardId)}>✕</DeleteBoardButton>
-      <Droppable droppableId={boardId}>
-        {(provided: DroppableProvided, { isDraggingOver, draggingOverWith, draggingFromThisWith, isUsingPlaceholder }: DroppableStateSnapshot) => (
-          <Board ref={provided.innerRef} {...provided.droppableProps}>
-            <BoardId onClick={() => handleEditBoard(boardId)}>{boardId}</BoardId>
-            <BoardForm onSubmit={handleSubmit(onValid)}>
-              <BoardInput {...register("text", { required: "할 일을 입력하세요." })} type="text" placeholder={`할 일을 추가하세요.`} />
-            </BoardForm>
-            <BoardContent isDraggingOver={isDraggingOver} draggingFromThisWith={Boolean(draggingFromThisWith)}>
-              {todos.map((todo: Todo, index: number) => (
-                <DraggableCard key={todo.id} index={index} boardId={boardId} todoId={todo.id} todoText={todo.text} />
-              ))}
-              {provided.placeholder}
-            </BoardContent>
-          </Board>
-        )}
-      </Droppable>
-    </Container>
-  );
-};
-
-export default DroppableBoard;

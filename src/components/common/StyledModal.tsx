@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Modal from "react-modal";
 
-const ModalContainer = styled(Modal)`
+const StyledModal = styled(Modal)`
   outline: none;
   position: absolute;
   top: 50%;
@@ -54,4 +54,4 @@ const ModalContainer = styled(Modal)`
   }
 `;
 
-export default ModalContainer;
+export default StyledModal;

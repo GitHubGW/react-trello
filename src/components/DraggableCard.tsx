@@ -1,9 +1,9 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Draggable, DraggableProvided, DraggableStateSnapshot } from "react-beautiful-dnd";
-import { SetterOrUpdater, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
-import { cardModalState, cardState, Todo, TodosState, todosState } from "../atom";
-import { handleSaveTodoInLocalStorage } from "../todo.utils";
+import { cardModalState, cardState, todosState } from "../atom";
+import { saveTodoToLocalStorage } from "../utils/todo";
 
 interface DraggableCardProps {
   index: number;
@@ -12,10 +12,49 @@ interface DraggableCardProps {
   todoText: string;
 }
 
-const Card = styled.div<{ isDragging: boolean }>`
-  background-color: ${(props) => (props.isDragging === true ? "rgba(85, 239, 196, 0.6)" : props.theme.cardColor)};
-  color: ${(props) => (props.isDragging === true ? "white" : "black")};
-  border: 3px solid ${(props) => (props.isDragging === true ? "rgba(85, 239, 196, 1)" : props.theme.cardColor)};
+const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps) => {
+  const setTodos = useSetRecoilState(todosState);
+  const setCardModal = useSetRecoilState(cardModalState);
+  const setCard = useSetRecoilState(cardState);
+
+  const handleEditTodo = useCallback(() => {
+    setCard({ [boardId]: todoId });
+    setCardModal(true);
+  }, [boardId, todoId, setCard, setCardModal]);
+
+  const handleDeleteTodo = useCallback(() => {
+    setTodos((prev) => {
+      const copiedTodos = [...prev[boardId]];
+      const filteredTodos = copiedTodos.filter((todo) => todo.id !== todoId);
+      const result = { ...prev, [boardId]: filteredTodos };
+      saveTodoToLocalStorage(result);
+      return result;
+    });
+  }, [boardId, todoId, setTodos]);
+
+  return (
+    <Draggable index={index} draggableId={String(todoId)} key={todoId}>
+      {(provided: DraggableProvided, { isDragging }: DraggableStateSnapshot) => (
+        <CardContainer ref={provided.innerRef} isDragging={isDragging} {...provided.draggableProps} {...provided.dragHandleProps}>
+          <CardText isDragging={isDragging}>{todoText}</CardText>
+          <CardEditButton type="button" isDragging={isDragging} onClick={handleEditTodo}>
+            ✎
+          </CardEditButton>
+          <CardDeleteButton type="button" isDragging={isDragging} onClick={handleDeleteTodo}>
+            ✕
+          </CardDeleteButton>
+        </CardContainer>
+      )}
+    </Draggable>
+  );
+};
+
+export default memo(DraggableCard);
+
+const CardContainer = styled.div<{ isDragging: boolean }>`
+  background-color: ${({ theme, isDragging }) => (isDragging ? "rgba(85, 239, 196, 0.6)" : theme.cardColor)};
+  color: ${({ isDragging }) => (isDragging ? "white" : "black")};
+  border: 3px solid ${({ theme, isDragging }) => (isDragging ? "rgba(85, 239, 196, 1)" : theme.cardColor)};
   border-radius: 5px;
   padding: 13px 12px;
   margin-bottom: 10px;
@@ -27,7 +66,7 @@ const Card = styled.div<{ isDragging: boolean }>`
 
 const CardText = styled.span<{ isDragging: boolean }>`
   font-size: 18px;
-  color: ${(props) => (props.isDragging === true ? "white" : "darkgray")};
+  color: ${({ isDragging }) => (isDragging ? "white" : "darkgray")};
   margin-right: auto;
 `;
 
@@ -35,8 +74,8 @@ const CardEditButton = styled.button<{ isDragging: boolean }>`
   border: none;
   outline: none;
   cursor: pointer;
-  background-color: ${(props) => (props.isDragging === true ? "white" : "rgba(178, 190, 195,1.0)")};
-  color: ${(props) => (props.isDragging === true ? "rgba(178, 190, 195,1.0)" : "white")};
+  background-color: ${({ isDragging }) => (isDragging ? "white" : "rgba(178, 190, 195,1.0)")};
+  color: ${({ isDragging }) => (isDragging ? "rgba(178, 190, 195,1.0)" : "white")};
   padding: 4.5px 7px;
   border-radius: 3px;
   font-size: 12px;
@@ -47,50 +86,9 @@ const CardDeleteButton = styled.button<{ isDragging: boolean }>`
   border: none;
   outline: none;
   cursor: pointer;
-  background-color: ${(props) => (props.isDragging === true ? "white" : "rgba(178, 190, 195,1.0)")};
-  color: ${(props) => (props.isDragging === true ? "rgba(178, 190, 195,1.0)" : "white")};
+  background-color: ${({ isDragging }) => (isDragging ? "white" : "rgba(178, 190, 195,1.0)")};
+  color: ${({ isDragging }) => (isDragging ? "rgba(178, 190, 195,1.0)" : "white")};
   padding: 5px 7px;
   border-radius: 3px;
   font-size: 12px;
 `;
-
-const DraggableCard = ({ index, boardId, todoId, todoText }: DraggableCardProps) => {
-  const setTodos: SetterOrUpdater<TodosState> = useSetRecoilState(todosState);
-  const setCardModal: SetterOrUpdater<boolean> = useSetRecoilState(cardModalState);
-  const setCard: SetterOrUpdater<object> = useSetRecoilState(cardState);
-
-  const handleEditTodo = (boardId: string, todoId: number): void => {
-    setCard({ [boardId]: todoId });
-    setCardModal(true);
-  };
-
-  const handleDeleteTodo = (todoId: number): void => {
-    setTodos((todos: TodosState) => {
-      const copiedTodos: Todo[] = [...todos[boardId]];
-      const filteredTodos: Todo[] = copiedTodos.filter((todo: Todo) => todo.id !== todoId);
-      const result = { ...todos, [boardId]: filteredTodos };
-      handleSaveTodoInLocalStorage(result);
-      return result;
-    });
-  };
-
-  return (
-    <Draggable index={index} draggableId={String(todoId)} key={todoId}>
-      {(provided: DraggableProvided, { isDragging }: DraggableStateSnapshot) => {
-        return (
-          <Card isDragging={isDragging} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-            <CardText isDragging={isDragging}>{todoText}</CardText>
-            <CardEditButton isDragging={isDragging} onClick={() => handleEditTodo(boardId, todoId)} type="button">
-              ✎
-            </CardEditButton>
-            <CardDeleteButton isDragging={isDragging} onClick={() => handleDeleteTodo(todoId)} type="button">
-              ✕
-            </CardDeleteButton>
-          </Card>
-        );
-      }}
-    </Draggable>
-  );
-};
-
-export default memo(DraggableCard);
